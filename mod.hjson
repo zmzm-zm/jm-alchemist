@@ -1,7 +1,7 @@
 displayName: "Alchemist"
 name: "alchemist"
 author: "zm"
-main: "example.ExampleJavaMod"
+main: "com.main"
 description: "All into gold"
 version: 0.0.1
 minGameVersion: 150
