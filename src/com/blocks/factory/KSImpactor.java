@@ -80,6 +80,6 @@ public class KSImpactor extends Block {
 
     boolean isValidTargetBuilding(Building target) {
         return target != null
-                && (target.block == com.blocks.); // 或其他允许的建筑
+                && (target.block instanceof com.blocks.factory.sublimator); // 或其他允许的建筑
     }
 }
