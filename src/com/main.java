@@ -3,6 +3,7 @@ package com;
 import arc.*;
 import arc.util.*;
 import com.items.items;
+import com.liquids.liquids;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 import mindustry.ui.dialogs.*;
@@ -29,6 +30,7 @@ public class main extends Mod{
     @Override
     public void loadContent(){
         items.load();
+        liquids.load();
     }
 
 }

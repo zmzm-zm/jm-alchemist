@@ -6,10 +6,11 @@ import mindustry.type.Item;
 import mindustry.content.Items;
 
 public class items {
-    public static Item CursedGold;
+
+    public static dynamicItems CursedGold;
 
     public static void load() {
-        CursedGold = new Item("cursed-gold") {{
+        CursedGold = new dynamicItems("cursed-gold") {{
             hardness = -1;
             cost = 1.0f;
             flammability = 0f;
@@ -19,6 +20,8 @@ public class items {
             color = Color.valueOf("#FFB100");
             localizedName = "咒金";
             description = "'神'在临走前留下了它的配方，上面乌黑的印记可能有什么特殊作用";
+
+            stats.put("cursePower",0.16f);
         }};
     }
 }
