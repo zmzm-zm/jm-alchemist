@@ -15,6 +15,7 @@ import com.items.items;
 
 public class KSImpactor extends Block {
 
+
     public float maxLinkR = 8.0f;
 
     public float liquidTransferRate = 0.02f;
@@ -27,6 +28,12 @@ public class KSImpactor extends Block {
         solid = true;
         update = true;
         hasLiquids = true;
+        hasPower = true;
+
+        size = 2;
+        health = 10;
+        buildTime = 1.0f * 60f;
+
     }
 
 

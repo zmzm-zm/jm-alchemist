@@ -25,10 +25,12 @@ public class sublimator extends Block {
 
         // 基础属性
         requirements(Category.crafting, ItemStack.with(Items.copper, 50, Items.lead, 30));
-        size = 2;
+        size = 5;
         hasLiquids = true;
         hasItems = true;
         solid = true;
+        health = 600;
+        buildTime = 10f * 60f;;
 
         // 添加液体消耗
         consume(new ConsumeLiquid(inputLiquid, liquidCost));
