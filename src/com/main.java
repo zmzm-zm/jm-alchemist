@@ -3,7 +3,7 @@ package com;
 import arc.*;
 import arc.util.*;
 import com.blocks.factory.KSImpactor;
-import com.blocks.factory.sublimator;
+import com.blocks.factory.sublimation;
 import com.items.items;
 import com.liquids.liquids;
 import mindustry.game.EventType.*;
@@ -34,7 +34,7 @@ public class main extends Mod{
         items.load();
         liquids.load();
 
-        new sublimator("sublimator"){{
+        new sublimation("sublimation"){{
             localizedName = "升华器";
             description = "蓄能完毕后，产生诅咒黄金————咒金";
         }};

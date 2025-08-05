@@ -1,15 +1,9 @@
 package com.blocks.factory;
 
-import arc.math.geom.Position;
-import mindustry.content.Blocks;
-import mindustry.content.Items;
-import mindustry.game.Team;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
 import mindustry.world.Block;
-import mindustry.world.Tile;
 import mindustry.gen.Building;
-import mindustry.type.Liquid;
 import com.items.items;
 
 public class KSImpactor extends Block {
@@ -39,7 +33,7 @@ public class KSImpactor extends Block {
             // 如果点击的是自己，清除链接
             if(other == this){
                 if(linkedTarget != null){
-                    ((sublimator.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
+                    ((sublimation.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
                     linkedTarget = null;
                 }
                 return false;
@@ -49,12 +43,12 @@ public class KSImpactor extends Block {
             if(isValidTargetBuilding(other) && other.within(this, maxLinkR)){
                 // 如果已有链接，先移除旧链接
                 if(linkedTarget != null){
-                    ((sublimator.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
+                    ((sublimation.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
                 }
 
                 // 建立新链接
                 linkedTarget = other;
-                ((sublimator.LiquidCraftingBuild)linkedTarget).addImpactorLink(this);
+                ((sublimation.LiquidCraftingBuild)linkedTarget).addImpactorLink(this);
                 return true;
             }
 
@@ -72,8 +66,8 @@ public class KSImpactor extends Block {
 
         @Override
         public void onRemoved() {
-            if(linkedTarget != null && linkedTarget instanceof sublimator.LiquidCraftingBuild) {
-                ((sublimator.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
+            if(linkedTarget != null && linkedTarget instanceof sublimation.LiquidCraftingBuild) {
+                ((sublimation.LiquidCraftingBuild)linkedTarget).removeImpactorLink(this);
             }
             super.onRemoved();
         }
@@ -91,6 +85,6 @@ public class KSImpactor extends Block {
 
     boolean isValidTargetBuilding(Building target) {
         return target != null
-                && (target.block instanceof com.blocks.factory.sublimator);
+                && (target.block instanceof sublimation);
     }
 }

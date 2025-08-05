@@ -4,23 +4,21 @@ import com.items.items;
 import com.liquids.liquids;
 import mindustry.type.*;
 import mindustry.world.*;
-import mindustry.world.consumers.Consume;
 import mindustry.world.consumers.ConsumeLiquid;
-import mindustry.world.meta.*;
 import mindustry.gen.*;
 import mindustry.content.*;
-import mindustry.graphics.*;
+
 import java.util.HashSet;
 import java.util.Set;
 
-public class sublimator extends Block {
+public class sublimation extends Block {
     public Item outputItem = items.CursedGold;
     public Liquid inputLiquid = liquids.KS1688457;
     public float liquidCost = 0.5f;
     public int itemAmount = 5; // 每次生产的物品数量
     public float craftTime = 20f * 60f; // 20秒（以帧为单位，60fps）
 
-    public sublimator(String name) {
+    public sublimation(String name) {
         super(name);
 
         // 基础属性
