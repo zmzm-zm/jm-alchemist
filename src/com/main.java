@@ -2,6 +2,7 @@ package com;
 
 import arc.*;
 import arc.util.*;
+import com.items.items;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 import mindustry.ui.dialogs.*;
@@ -27,7 +28,7 @@ public class main extends Mod{
 
     @Override
     public void loadContent(){
-        Log.info("Loading some example content.");
+        items.load();
     }
 
 }
