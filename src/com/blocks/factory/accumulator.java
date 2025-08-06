@@ -72,17 +72,30 @@ public class accumulator extends GenericCrafter {
             return BrrierNum;
         }
 
+        private float craftProgress = 0f;
+
         @Override
         public void update() {
             super.update();
 
-            if(timer.get(0,2f * 60f))
-            {
+            if(timer.get(0,2f * 60f)) {
                 BrrierNum = GetBrrierNum();
 
                 efficiency = Mathf.clamp(1f - ((float)BrrierNum / 120f), 0f, 1f);
                 Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
+
+            if (efficiency > 0) {
+
+                craftProgress += efficiency / craftTime;
+
+                if (craftProgress >= 1f) {
+                    handleLiquid(this, outputLiquid.liquid, outputLiquid.amount);
+                }
+            } else {
+                craftProgress = 0f;
+            }
+
         }
 
         @Override
