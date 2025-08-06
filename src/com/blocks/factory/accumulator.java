@@ -4,11 +4,11 @@ import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.math.Mathf;
+import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Items;
-import mindustry.gen.Building;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
 import mindustry.type.LiquidStack;
@@ -86,11 +86,15 @@ public class accumulator extends GenericCrafter {
             }
 
             if (efficiency > 0) {
+                craftProgress += (efficiency / craftTime) * Time.delta;
 
-                craftProgress += efficiency / craftTime;
 
-                if (craftProgress >= 1f) {
-                    handleLiquid(this, outputLiquid.liquid, outputLiquid.amount);
+                int times = (int)craftProgress;
+                if (times > 0) {
+
+                    handleLiquid(this, outputLiquid.liquid, outputLiquid.amount * times);
+
+                    craftProgress -= times;
                 }
             } else {
                 craftProgress = 0f;
