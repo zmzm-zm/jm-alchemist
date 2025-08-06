@@ -4,6 +4,8 @@ import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.math.Mathf;
+import arc.util.io.Reads;
+import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Items;
 import mindustry.gen.Building;
@@ -39,7 +41,7 @@ public class accumulator extends GenericCrafter {
                 )
         );
 
-        outputLiquid = new LiquidStack(liquids.KS1688457, 0.12f);;
+        outputLiquid = new LiquidStack(liquids.KS1688457, 0.12f);
 
         craftTime = 3f * 60f;
     }
@@ -57,6 +59,7 @@ public class accumulator extends GenericCrafter {
         }
 
         private int GetBrrierNum() {
+            BrrierNum = 0;
             for (int TargetX = -NeedSize; TargetX < NeedSize; TargetX++) {
                 for (int TargetY = -NeedSize; TargetY < NeedSize; TargetY++) {
                     Tile Other = Vars.world.tile(ThisTile.x + TargetX, ThisTile.y + TargetY);
@@ -72,11 +75,11 @@ public class accumulator extends GenericCrafter {
         public void update() {
             super.update();
 
-            if(timer.get(0,5f * 60f))
+            if(timer.get(0,2f * 60f))
             {
                 BrrierNum = GetBrrierNum();
 
-                efficiency = Mathf.clamp(1f - (BrrierNum/ 150f), 0f, 1f);
+                efficiency = Mathf.clamp(1f - (BrrierNum/ 50f), 0.05f, 1f);
             }
         }
 
@@ -98,6 +101,19 @@ public class accumulator extends GenericCrafter {
 
             // 重置颜色
             Draw.reset();
+        }
+
+        @Override
+        public void write(Writes write) {
+            super.write(write);
+            write.i(BrrierNum); // 保存障碍物数量
+        }
+
+        @Override
+        public void read(Reads read, byte revision) {
+            super.read(read, revision);
+            BrrierNum = read.i(); // 加载障碍物数量
+            ThisTile = tile; // 重新关联Tile
         }
     }
 }
