@@ -79,7 +79,8 @@ public class accumulator extends GenericCrafter {
             {
                 BrrierNum = GetBrrierNum();
 
-                efficiency = Mathf.clamp(1f - (BrrierNum/ 50f), 0.05f, 1f);
+                efficiency = Mathf.clamp(1f - (BrrierNum/ 100f), 0.5f, 1f);
+                Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
         }
 
@@ -87,19 +88,20 @@ public class accumulator extends GenericCrafter {
         public void draw() {
             super.draw();
 
-            // 绘制调试条（绿色：效率，红色：背景）
-            float barWidth = 50f; // 条的总宽度
-            float currentWidth = barWidth * efficiency; // 当前效率对应的长度
+            // 只在可见时绘制
+            if(!isVisible()) return;
 
-            // 绘制背景（红色）
+            float barWidth = size * 8f; // 根据建筑大小调整
+            float currentWidth = barWidth * efficiency;
+
+            // 背景条
             Draw.color(Color.red);
-            Fill.rect(x, y - 20f, barWidth, 5f);
+            Fill.crect(x, y + size * 4f + 5, barWidth, 3);
 
-            // 绘制效率条（绿色）
+            // 效率条
             Draw.color(Color.green);
-            Fill.rect(x - (barWidth - currentWidth) / 2f, y - 20f, currentWidth, 5f);
+            Fill.crect(x - (barWidth - currentWidth)/2f, y + size * 4f + 5, currentWidth, 3);
 
-            // 重置颜色
             Draw.reset();
         }
 
