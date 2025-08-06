@@ -60,18 +60,12 @@ public class accumulator extends GenericCrafter {
 
         private int GetBrrierNum() {
             BrrierNum = 0;
-            for (int TargetX = -NeedSize; TargetX < NeedSize; TargetX++) {
-                for (int TargetY = -NeedSize; TargetY < NeedSize; TargetY++) {
+            // 修正循环范围：包含NeedSize（-6到6，共13×13=169个Tile）
+            for (int TargetX = -NeedSize; TargetX <= NeedSize; TargetX++) {
+                for (int TargetY = -NeedSize; TargetY <= NeedSize; TargetY++) {
                     Tile Other = Vars.world.tile(ThisTile.x + TargetX, ThisTile.y + TargetY);
-                    if (Other != null && (Other.block() != null || Other.overlay() != null || !Other.block().isAir())) {
+                    if (Other != null && !Other.block().isAir()) {
                         BrrierNum++;
-                        Draw.color(Color.red);
-                        Fill.rect(TargetX, TargetY, 1, 1);
-                    }
-                    else
-                    {
-                        Draw.color(Color.green);
-                        Fill.rect(TargetX, TargetY, 1, 1);
                     }
                 }
             }
