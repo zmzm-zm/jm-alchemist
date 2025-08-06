@@ -63,7 +63,7 @@ public class accumulator extends GenericCrafter {
             for (int TargetX = -NeedSize; TargetX < NeedSize; TargetX++) {
                 for (int TargetY = -NeedSize; TargetY < NeedSize; TargetY++) {
                     Tile Other = Vars.world.tile(ThisTile.x + TargetX, ThisTile.y + TargetY);
-                    if (Other != null && (Other.block() != null || Other.overlay() != null)) {
+                    if (Other != null && (Other.block() != null || Other.overlay() != null || !Other.block().isAir())) {
                         BrrierNum++;
                     }
                 }
@@ -79,7 +79,7 @@ public class accumulator extends GenericCrafter {
             {
                 BrrierNum = GetBrrierNum();
 
-                efficiency = Mathf.clamp(1f - (BrrierNum/ 100f), 0.5f, 1f);
+                efficiency = Mathf.clamp(1f - (BrrierNum/ 200f), 0.2f, 1f);
                 Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
         }
