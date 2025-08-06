@@ -46,7 +46,7 @@ public class accumulator extends GenericCrafter {
         craftTime = 3f * 60f;
     }
 
-    public class AccumulatorBuild extends Building {
+    public class AccumulatorBuild extends GenericCrafter.GenericCrafterBuild {
 
         private int NeedSize = 6;
         private int BrrierNum = 0;
