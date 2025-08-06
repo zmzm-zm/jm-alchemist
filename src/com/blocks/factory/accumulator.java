@@ -43,7 +43,7 @@ public class accumulator extends GenericCrafter {
 
         outputLiquid = new LiquidStack(liquids.KS1688457, 0.12f);
 
-        craftTime = 3f * 60f;
+        craftTime = 2f * 60f;
     }
 
     public class AccumulatorBuild extends GenericCrafter.GenericCrafterBuild {
@@ -80,7 +80,7 @@ public class accumulator extends GenericCrafter {
             {
                 BrrierNum = GetBrrierNum();
 
-                efficiency = Mathf.clamp(1f - (BrrierNum/ 200f), 0.2f, 1f);
+                efficiency = Mathf.clamp(1f - ((float)BrrierNum / 120f), 0f, 1f);
                 Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
         }
