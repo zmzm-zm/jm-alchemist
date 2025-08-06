@@ -65,6 +65,13 @@ public class accumulator extends GenericCrafter {
                     Tile Other = Vars.world.tile(ThisTile.x + TargetX, ThisTile.y + TargetY);
                     if (Other != null && (Other.block() != null || Other.overlay() != null || !Other.block().isAir())) {
                         BrrierNum++;
+                        Draw.color(Color.red);
+                        Fill.rect(TargetX, TargetY, 1, 1);
+                    }
+                    else
+                    {
+                        Draw.color(Color.green);
+                        Fill.rect(TargetX, TargetY, 1, 1);
                     }
                 }
             }
