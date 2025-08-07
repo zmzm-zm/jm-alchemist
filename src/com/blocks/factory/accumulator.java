@@ -54,11 +54,18 @@ public class accumulator extends GenericCrafter {
         private int NeedSize = 6;
         private int BrrierNum = 0;
         private Tile ThisTile;
+        private float[] particleSeeds;
+
 
         @Override
         public void placed() {
             super.placed();
             ThisTile = tile;
+
+            particleSeeds = new float[35]; // 最大粒子数量
+            for(int i = 0; i < particleSeeds.length; i++){
+                particleSeeds[i] = Mathf.random(0f, 1000f); // 随机初始相位
+            }
         }
 
         private int GetBrrierNum() {
@@ -116,33 +123,40 @@ public class accumulator extends GenericCrafter {
         @Override
         public void draw() {
             super.draw();
-            if (!isVisible()) return;
+            if (!isVisible() || efficiency <= 0.01f) return;
 
-            // 移到 draw() 方法内
-            if (efficiency > 0.01f) {
-                Draw.z(Layer.effect);
-                Color[] colors = {
-                        Color.valueOf("#feff89"),
-                        Color.valueOf("#e7e89c"),
-                        Color.valueOf("#c8c849")
-                };
-                float[] weights = {0.4f, 0.3f, 0.3f};
+            Draw.z(Layer.effect);
 
-                float R = Mathf.clamp(18f * (1f - efficiency), 0.08f, 18f);
-                int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
+            // 颜色配置
+            Color[] colors = {
+                    Color.valueOf("#feff89"),
+                    Color.valueOf("#e7e89c"),
+                    Color.valueOf("#c8c849")
+            };
+            float[] weights = {0.4f, 0.3f, 0.3f};
 
-                for (int i = 0; i < particleCount; i++) {
-                    float angle = Time.time * 0.5f + i * 360f / particleCount;
-                    float px = x + Mathf.cosDeg(angle) * R * (1f - efficiency * 0.8f);
-                    float py = y + Mathf.sinDeg(angle) * R * (1f - efficiency * 0.8f);
+            // 粒子参数
+            int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
+            float maxRadius = 18f; // 最大半径
+            float minRadius = 1f;  // 最小半径（中心区域）
 
-                    Color NowColor = getColor(weights, colors);
+            for (int i = 0; i < particleCount; i++) {
+                // 使用唯一种子计算独立参数
+                float seed = particleSeeds[i];
+                float spiralProgress = (Time.time * 0.3f + seed) % 1f;
+                float currentRadius = maxRadius - (maxRadius - minRadius) * spiralProgress;
 
-                    Draw.color(NowColor, 0.8f * efficiency);
+                // 角度加入种子影响
+                float angle = Time.time * 50f + (i * 137.5f) + seed; // 137.5°黄金角度分散
 
-                    Fill.circle(px, py, 1f + efficiency * 2f);
-                }
+                float px = x + Mathf.cosDeg(angle) * currentRadius;
+                float py = y + Mathf.sinDeg(angle) * currentRadius;
+
+                Color particleColor = getColor(weights, colors);
+                Draw.color(particleColor, 0.8f * efficiency * spiralProgress); // 透明度随进度变化
+                Fill.circle(px, py, 1f + efficiency * 2f);
             }
+
             Draw.reset();
         }
 
