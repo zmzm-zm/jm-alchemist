@@ -9,12 +9,15 @@ import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Items;
+import mindustry.graphics.Layer;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
 import mindustry.type.LiquidStack;
 import mindustry.world.Tile;
 import mindustry.world.blocks.production.GenericCrafter;
 import com.liquids.liquids;
+
+import java.awt.*;
 
 public class accumulator extends GenericCrafter {
 
@@ -29,8 +32,8 @@ public class accumulator extends GenericCrafter {
         hasPower = false;
         hasItems = false;
         outputsLiquid = true;
-        liquidCapacity = 2.7f;
-        liquidPressure = 0.82f;
+        liquidCapacity = 18f;
+        liquidPressure = 8.2f;
         buildTime = 2f * 60f;
 
         //建造需要
@@ -107,26 +110,54 @@ public class accumulator extends GenericCrafter {
 
         }
 
+
+
+
         @Override
         public void draw() {
             super.draw();
+            if (!isVisible()) return;
 
-            // 只在可见时绘制
-            if(!isVisible()) return;
+            // 移到 draw() 方法内
+            if (efficiency > 0.01f) {
+                Draw.z(Layer.effect);
+                Color[] colors = {
+                        Color.valueOf("#feff89"),
+                        Color.valueOf("#e7e89c"),
+                        Color.valueOf("#c8c849")
+                };
+                float[] weights = {0.4f, 0.3f, 0.3f};
 
-            float barWidth = size * 8f; // 根据建筑大小调整
-            float currentWidth = barWidth * efficiency;
+                float R = Mathf.clamp(18f * (1f - efficiency), 0.08f, 1f);
+                int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
 
-            // 背景条
-            Draw.color(Color.red);
-            Fill.crect(x, y + size * 4f + 5, barWidth, 3);
+                for (int i = 0; i < particleCount; i++) {
+                    float angle = Time.time * 0.5f + i * 360f / particleCount;
+                    float px = x + Mathf.cosDeg(angle) * R * (1f - efficiency * 0.8f);
+                    float py = y + Mathf.sinDeg(angle) * R * (1f - efficiency * 0.8f);
 
-            // 效率条
-            Draw.color(Color.green);
-            Fill.crect(x - (barWidth - currentWidth)/2f, y + size * 4f + 5, currentWidth, 3);
+                    Color NowColor = getColor(weights, colors);
 
+                    Draw.color(NowColor, 0.8f * efficiency);
+
+                    Fill.circle(px, py, 1f + efficiency * 2f);
+                }
+            }
             Draw.reset();
         }
+
+        private Color getColor(float[] weights, Color[] colors) {
+            float rand = Mathf.random();
+            float cumulativeWeight = 0f;
+            for (int i = 0; i < weights.length; i++) {
+                cumulativeWeight += weights[i];
+                if (rand <= cumulativeWeight) {
+                    return colors[i];
+                }
+            }
+            return colors[0];
+        }
+
 
         @Override
         public void write(Writes write) {
