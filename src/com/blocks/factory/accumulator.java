@@ -137,13 +137,15 @@ public class accumulator extends GenericCrafter {
 
             // 粒子参数
             int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
-            float maxRadius = 18f; // 最大半径
+            float maxRadius = 70f; // 最大半径
             float minRadius = 1f;  // 最小半径（中心区域）
+
+            float spiralSpeed = 0.1f;
 
             for (int i = 0; i < particleCount; i++) {
                 // 使用唯一种子计算独立参数
                 float seed = particleSeeds[i];
-                float spiralProgress = (Time.time * 0.3f + seed) % 1f;
+                float spiralProgress = (Time.time * spiralSpeed + seed) % 1f;
                 float currentRadius = maxRadius - (maxRadius - minRadius) * spiralProgress;
 
                 // 角度加入种子影响
@@ -154,7 +156,7 @@ public class accumulator extends GenericCrafter {
 
                 Color particleColor = getColor(weights, colors);
                 Draw.color(particleColor, 0.8f * efficiency * spiralProgress); // 透明度随进度变化
-                Fill.circle(px, py, 1f + efficiency * 2f);
+                Fill.circle(px, py, 1f + efficiency * 5f);
             }
 
             Draw.reset();
