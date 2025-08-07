@@ -137,7 +137,7 @@ public class accumulator extends GenericCrafter {
 
             // 粒子参数
             int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
-            float maxRadius = 70f; // 最大半径
+            float maxRadius = 140f; // 最大半径
             float minRadius = 1f;  // 最小半径（中心区域）
 
             float spiralSpeed = 0.0000000005f;
