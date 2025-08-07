@@ -63,7 +63,7 @@ public class accumulator extends GenericCrafter {
             super.placed();
             ThisTile = tile;
 
-            particleSeeds = new float[75]; // 最大粒子数量
+            particleSeeds = new float[35]; // 最大粒子数量
             for(int i = 0; i < particleSeeds.length; i++){
                 particleSeeds[i] = Mathf.random(0f, 1000f); // 随机初始相位
             }
@@ -140,7 +140,7 @@ public class accumulator extends GenericCrafter {
             int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
             float maxRadius = 140f; // 最大半径
             float minRadius = 1f;  // 最小半径（中心区域）
-            float cycleTime = 3.4f;
+            float cycleTime = 10f;
 
             float spiralSpeed = 0.5f;
 
@@ -162,7 +162,7 @@ public class accumulator extends GenericCrafter {
 
                 Color particleColor = getColor(weights, colors);
                 Draw.color(particleColor, a); // 透明度随进度变化
-                Fill.circle(px, py, 5f + efficiency * 5f);
+                Fill.circle(px, py, 8f + efficiency * 6f);
             }
 
             Draw.reset();
