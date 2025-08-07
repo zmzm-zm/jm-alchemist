@@ -32,7 +32,7 @@ public class accumulator extends GenericCrafter {
         hasPower = false;
         hasItems = false;
         outputsLiquid = true;
-        liquidCapacity = 18f;
+        liquidCapacity = 9f;
         liquidPressure = 8.2f;
         buildTime = 2f * 60f;
 
@@ -44,7 +44,7 @@ public class accumulator extends GenericCrafter {
                 )
         );
 
-        outputLiquid = new LiquidStack(liquids.KS1688457, 0.12f);
+        outputLiquid = new LiquidStack(liquids.KS1688457, 0.87f);
 
         craftTime = 2f * 60f;
     }
@@ -128,7 +128,7 @@ public class accumulator extends GenericCrafter {
                 };
                 float[] weights = {0.4f, 0.3f, 0.3f};
 
-                float R = Mathf.clamp(18f * (1f - efficiency), 0.08f, 1f);
+                float R = Mathf.clamp(18f * (1f - efficiency), 0.08f, 18f);
                 int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
 
                 for (int i = 0; i < particleCount; i++) {
