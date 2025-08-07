@@ -140,7 +140,7 @@ public class accumulator extends GenericCrafter {
             float maxRadius = 70f; // 最大半径
             float minRadius = 1f;  // 最小半径（中心区域）
 
-            float spiralSpeed = 0.1f;
+            float spiralSpeed = 0.0000000005f;
 
             for (int i = 0; i < particleCount; i++) {
                 // 使用唯一种子计算独立参数
@@ -155,7 +155,7 @@ public class accumulator extends GenericCrafter {
                 float py = y + Mathf.sinDeg(angle) * currentRadius;
 
                 Color particleColor = getColor(weights, colors);
-                Draw.color(particleColor, 0.8f * efficiency * spiralProgress); // 透明度随进度变化
+                Draw.color(particleColor, 0.8f * efficiency); // 透明度随进度变化
                 Fill.circle(px, py, 1f + efficiency * 5f);
             }
 
