@@ -30,7 +30,7 @@ public class accumulator extends GenericCrafter {
         hasItems = false;
         outputsLiquid = true;
         liquidCapacity = 14.7f;
-        liquidPressure = 0.12f;
+        liquidPressure = 0.82f;
         buildTime = 2f * 60f;
 
         //建造需要
