@@ -92,7 +92,7 @@ public class accumulator extends GenericCrafter {
 
                 while (progress >= 1f) {
                     if (liquids.get(outputLiquid.liquid) + outputLiquid.amount <= liquidCapacity) {
-                        handleLiquid(this, outputLiquid.liquid, outputLiquid.amount);
+                        dumpLiquid(outputLiquid.liquid, outputLiquid.amount);
                         progress -= 1f;
                     } else {
                         progress = 0f;
