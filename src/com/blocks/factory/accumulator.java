@@ -16,6 +16,7 @@ import mindustry.type.LiquidStack;
 import mindustry.world.Tile;
 import mindustry.world.blocks.production.GenericCrafter;
 import com.liquids.liquids;
+import arc.math.Mathf;
 
 import java.awt.*;
 
@@ -62,7 +63,7 @@ public class accumulator extends GenericCrafter {
             super.placed();
             ThisTile = tile;
 
-            particleSeeds = new float[35]; // 最大粒子数量
+            particleSeeds = new float[75]; // 最大粒子数量
             for(int i = 0; i < particleSeeds.length; i++){
                 particleSeeds[i] = Mathf.random(0f, 1000f); // 随机初始相位
             }
@@ -139,14 +140,16 @@ public class accumulator extends GenericCrafter {
             int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
             float maxRadius = 140f; // 最大半径
             float minRadius = 1f;  // 最小半径（中心区域）
+            float cycleTime = 3.4f;
 
             float spiralSpeed = 0.5f;
 
             for (int i = 0; i < particleCount; i++) {
                 // 使用唯一种子计算独立参数
                 float seed = particleSeeds[i];
-                float spiralProgress = ((Time.time * 0.1f) + seed) % 1f;
-                float currentRadius = maxRadius - (maxRadius - minRadius) * spiralProgress;
+                float progress = ((Time.time / cycleTime) + (seed * 0.001f)) % 1f;
+                float spiralProgress = progress < 0.5f ? progress * 2f : (1f - progress) * 2f;
+                float currentRadius = minRadius + (maxRadius - minRadius) * spiralProgress;
 
                 // 角度加入种子影响
                 float angle = Time.time * 1f + (i * 137.5f) + seed; // 137.5°黄金角度分散
@@ -158,7 +161,7 @@ public class accumulator extends GenericCrafter {
 
 
                 Color particleColor = getColor(weights, colors);
-                Draw.color(particleColor, 0.8f * efficiency * spiralProgress * 0.7f); // 透明度随进度变化
+                Draw.color(particleColor, a); // 透明度随进度变化
                 Fill.circle(px, py, 5f + efficiency * 5f);
             }
 
