@@ -145,11 +145,11 @@ public class accumulator extends GenericCrafter {
             for (int i = 0; i < particleCount; i++) {
                 // 使用唯一种子计算独立参数
                 float seed = particleSeeds[i];
-                float spiralProgress = (spiralSpeed + seed) % 1f;
+                float spiralProgress = ((Time.time * 0.1f) + seed) % 1f;
                 float currentRadius = maxRadius - (maxRadius - minRadius) * spiralProgress;
 
                 // 角度加入种子影响
-                float angle = Time.time * 50f + (i * 137.5f) + seed; // 137.5°黄金角度分散
+                float angle = Time.time * 1f + (i * 137.5f) + seed; // 137.5°黄金角度分散
 
                 float px = x + Mathf.cosDeg(angle) * currentRadius;
                 float py = y + Mathf.sinDeg(angle) * currentRadius;
