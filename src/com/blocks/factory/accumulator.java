@@ -16,6 +16,9 @@ import mindustry.type.LiquidStack;
 import mindustry.world.Tile;
 import mindustry.world.blocks.production.GenericCrafter;
 import com.liquids.liquids;
+import arc.math.Mathf;
+
+import java.awt.*;
 
 public class accumulator extends GenericCrafter {
 
@@ -52,21 +55,22 @@ public class accumulator extends GenericCrafter {
         private int NeedSize = 6;
         private int BrrierNum = 0;
         private Tile ThisTile;
-        private float[] particleSeeds;
+        private float[] particleSeeds = new float[40];
+
 
         @Override
         public void placed() {
             super.placed();
             ThisTile = tile;
-
-            particleSeeds = new float[35]; // 最大粒子数量
-            for (int i = 0; i < particleSeeds.length; i++) {
-                particleSeeds[i] = Mathf.random(0f, 1000f); // 随机初始相位
+            // 初始化粒子种子
+            for(int i = 0; i < particleSeeds.length; i++){
+                particleSeeds[i] = Mathf.random(0f, 1000f);
             }
         }
 
         private int GetBrrierNum() {
             BrrierNum = 0;
+            // 修正循环范围：包含NeedSize（-6到6，共13×13=169个Tile）
             for (int TargetX = -NeedSize; TargetX <= NeedSize; TargetX++) {
                 for (int TargetY = -NeedSize; TargetY <= NeedSize; TargetY++) {
                     Tile Other = Vars.world.tile(ThisTile.x + TargetX, ThisTile.y + TargetY);
@@ -80,12 +84,14 @@ public class accumulator extends GenericCrafter {
 
         @Override
         public void update() {
-            if (timer.get(0, 1.2f * 60f)) {
+            //super.update();
+
+            if(timer.get(0,1.2f * 60f)) {
                 BrrierNum = GetBrrierNum();
                 Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
 
-            efficiency = Mathf.clamp(1f - ((float) BrrierNum / 120f), 0f, 1f);
+            efficiency = Mathf.clamp(1f - ((float)BrrierNum / 120f), 0f, 1f);
 
             if (liquids.get(outputLiquid.liquid) >= liquidCapacity - 0.01f) {
                 efficiency = 0f;
@@ -108,50 +114,70 @@ public class accumulator extends GenericCrafter {
             }
 
             dumpLiquid(outputLiquid.liquid);
+
         }
+
+
+
 
         @Override
         public void draw() {
             super.draw();
+
+            // 当不可见或效率过低时不绘制特效
             if (!isVisible() || efficiency <= 0.01f) return;
 
-            Draw.z(Layer.effect);
+            Draw.z(Layer.effect); // 设置绘制层级为特效层
 
-            // 颜色配置
+            // 颜色配置 - 使用原有的三种黄色调
             Color[] colors = {
-                    Color.valueOf("#feff89"),
-                    Color.valueOf("#e7e89c"),
-                    Color.valueOf("#c8c849")
+                    Color.valueOf("#feff89"), // 亮黄色
+                    Color.valueOf("#e7e89c"), // 浅黄
+                    Color.valueOf("#c8c849") // 深黄
             };
-            float[] weights = {0.4f, 0.3f, 0.3f};
 
             // 粒子参数
-            int particleCount = Mathf.clamp((int) (35f * efficiency), 10, 35);
-            float maxRadius = 140f; // 最大半径
-            float minRadius = 1f;  // 最小半径（中心区域）
-            float cycleTime = 10f;
+            int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
+            float baseSize = 2f + efficiency * 3f; // 基础粒子大小
+            float lifeScale = 1f + efficiency * 2f; // 生命周期缩放
 
+            // 绘制粒子效果
             for (int i = 0; i < particleCount; i++) {
-                // 使用唯一种子计算独立参数
-                float seed = particleSeeds[i];
-                float progress = ((Time.time / cycleTime) + (seed * 0.001f)) % 1f;
-                float spiralProgress = progress < 0.5f ? progress * 2f : (1f - progress) * 2f;
-                float currentRadius = minRadius + (maxRadius - minRadius) * spiralProgress;
+                // 使用预生成的种子确保粒子行为一致
+                float seed = particleSeeds[i % particleSeeds.length];
 
-                // 角度加入种子影响
-                float angle = Time.time * 1f + (i * 137.5f) + seed; // 137.5°黄金角度分散
+                // 计算粒子生命周期 (0-1循环)
+                float life = ((Time.time + seed) % 8f) / 8f;
 
-                float px = x + Mathf.cosDeg(angle) * currentRadius;
-                float py = y + Mathf.sinDeg(angle) * currentRadius;
+                // 粒子位置计算 - 螺旋上升效果
+                float angle = life * 360f * 2f + seed; // 旋转角度
+                float radius = life * 40f; // 随生命周期增加的半径
 
-                float a = Mathf.clamp(0.8f * efficiency * spiralProgress * 0.7f, 0.25f, 1f);
+                // 计算粒子位置
+                float px = x + Mathf.cosDeg(angle) * radius;
+                float py = y + Mathf.sinDeg(angle) * radius + life * 20f; // 向上移动
 
-                Color particleColor = getColor(weights, colors);
-                Draw.color(particleColor, a); // 透明度随进度变化
-                Fill.circle(px, py, 8f + efficiency * 6f); // 粒子大小
+                // 粒子大小随生命周期变化
+                float size = baseSize * (1f - Math.abs(life - 0.5f) * 1.8f);
+
+                // 透明度随生命周期变化
+                float alpha = Mathf.clamp(1f - Math.abs(life - 0.5f) * 2f) * efficiency;
+
+                // 选择颜色 - 使用权重随机选择
+                Color color = colors[(int)(life * colors.length) % colors.length];
+
+                // 绘制粒子
+                Draw.color(color, alpha);
+                Fill.circle(px, py, size);
+
+                // 添加光晕效果
+                if(size > 3f){
+                    Draw.color(color, alpha * 0.3f);
+                    Fill.circle(px, py, size * 1.8f);
+                }
             }
 
-            Draw.reset();
+            Draw.reset(); // 重置绘制状态
         }
 
         private Color getColor(float[] weights, Color[] colors) {
@@ -165,6 +191,7 @@ public class accumulator extends GenericCrafter {
             }
             return colors[0];
         }
+
 
         @Override
         public void write(Writes write) {
