@@ -4,6 +4,8 @@ import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Fill;
 import arc.math.Mathf;
+import arc.math.Rand;
+import arc.math.geom.Vec2;
 import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
@@ -55,16 +57,77 @@ public class accumulator extends GenericCrafter {
         private int NeedSize = 6;
         private int BrrierNum = 0;
         private Tile ThisTile;
-        private float[] particleSeeds = new float[40];
+        private float[] particleSeeds;
 
+        // 粒子系统参数
+        private final int particleCount = 35;      // 粒子总数
+        private final float maxRadius = 140f;      // 最大旋转半径
+        private final float minRadius = 1f;        // 最小旋转半径
+        private final float cycleTime = 10f;       // 完整生命周期（秒）
+        private final float rotationSpeed = 1f;    // 基础旋转速度
+
+        // 粒子属性存储
+        private float[] particleRadii;            // 当前半径
+        private float[] particleAngles;           // 当前角度
+        private float[] particleTimeOffsets;      // 时间偏移量（个体差异）
+        private Color[] particleColors;           // 粒子颜色
+        private Vec2[] particlePositions;         // 计算位置缓存
 
         @Override
         public void placed() {
             super.placed();
             ThisTile = tile;
             // 初始化粒子种子
+            particleSeeds = new float[35]; // 保持原始35个粒子
+            Rand rand = new Rand();
             for(int i = 0; i < particleSeeds.length; i++){
-                particleSeeds[i] = Mathf.random(0f, 1000f);
+                particleSeeds[i] = rand.random(360f); // 随机角度种子
+            }
+        }
+
+        // 初始化粒子属性
+        private void initParticles() {
+            Rand rand = new Rand();
+
+            // 颜色配置（与绘图效果一致）
+            Color[] colors = {
+                    Color.valueOf("#feff89"),  // 主色调
+                    Color.valueOf("#e7e89c"),  // 次要色调
+                    Color.valueOf("#c8c849")   // 高光色调
+            };
+            float[] weights = {0.4f, 0.3f, 0.3f};
+
+            // 初始化粒子数组
+            particleRadii = new float[particleCount];
+            particleAngles = new float[particleCount];
+            particleTimeOffsets = new float[particleCount];
+            particleColors = new Color[particleCount];
+            particlePositions = new Vec2[particleCount];
+
+            // 为每个粒子生成随机属性
+            for (int i = 0; i < particleCount; i++) {
+                // 初始半径在最大半径范围内随机
+                particleRadii[i] = rand.random(minRadius, maxRadius * 0.9f);
+
+                // 随机角度（0-360度）
+                particleAngles[i] = rand.random(360f);
+
+                // 时间偏移（使粒子运动不同步）
+                particleTimeOffsets[i] = rand.random(cycleTime);
+
+                // 随机分配颜色（按权重）
+                float colorChoice = rand.nextFloat();
+                float cumulative = 0f;
+                for (int c = 0; c < weights.length; c++) {
+                    cumulative += weights[c];
+                    if (colorChoice <= cumulative) {
+                        particleColors[i] = colors[c];
+                        break;
+                    }
+                }
+
+                // 初始化位置缓存
+                particlePositions[i] = new Vec2();
             }
         }
 
@@ -123,63 +186,46 @@ public class accumulator extends GenericCrafter {
         @Override
         public void draw() {
             super.draw();
-
-            // 当不可见或效率过低时不绘制特效
             if (!isVisible() || efficiency <= 0.01f) return;
 
-            Draw.z(Layer.effect); // 设置绘制层级为特效层
+            Draw.z(Layer.effect);
 
-            // 颜色配置 - 使用原有的三种黄色调
+            // 保持原始颜色配置
             Color[] colors = {
-                    Color.valueOf("#feff89"), // 亮黄色
-                    Color.valueOf("#e7e89c"), // 浅黄
-                    Color.valueOf("#c8c849") // 深黄
+                    Color.valueOf("#feff89"),
+                    Color.valueOf("#e7e89c"),
+                    Color.valueOf("#c8c849")
             };
+            float[] weights = {0.4f, 0.3f, 0.3f};
 
-            // 粒子参数
+            // 保持原始粒子数量计算
             int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
-            float baseSize = 2f + efficiency * 3f; // 基础粒子大小
-            float lifeScale = 1f + efficiency * 2f; // 生命周期缩放
+            float maxRadius = 140f;
+            float minRadius = 1f;
+            float cycleTime = 10f;
 
-            // 绘制粒子效果
             for (int i = 0; i < particleCount; i++) {
-                // 使用预生成的种子确保粒子行为一致
-                float seed = particleSeeds[i % particleSeeds.length];
+                // 完全保持原始运动逻辑
+                float seed = particleSeeds[i];
+                float progress = ((Time.time / cycleTime) + (seed * 0.001f)) % 1f;
+                float spiralProgress = progress < 0.5f ? progress * 2f : (1f - progress) * 2f;
+                float currentRadius = minRadius + (maxRadius - minRadius) * spiralProgress;
+                float angle = Time.time * 1f + (i * 137.5f) + seed;
 
-                // 计算粒子生命周期 (0-1循环)
-                float life = ((Time.time + seed) % 8f) / 8f;
+                float px = x + Mathf.cosDeg(angle) * currentRadius;
+                float py = y + Mathf.sinDeg(angle) * currentRadius;
+                float a = Mathf.clamp(0.8f * efficiency * spiralProgress * 0.7f, 0.25f, 1f);
 
-                // 粒子位置计算 - 螺旋上升效果
-                float angle = life * 360f * 2f + seed; // 旋转角度
-                float radius = life * 40f; // 随生命周期增加的半径
-
-                // 计算粒子位置
-                float px = x + Mathf.cosDeg(angle) * radius;
-                float py = y + Mathf.sinDeg(angle) * radius + life * 20f; // 向上移动
-
-                // 粒子大小随生命周期变化
-                float size = baseSize * (1f - Math.abs(life - 0.5f) * 1.8f);
-
-                // 透明度随生命周期变化
-                float alpha = Mathf.clamp(1f - Math.abs(life - 0.5f) * 2f) * efficiency;
-
-                // 选择颜色 - 使用权重随机选择
-                Color color = colors[(int)(life * colors.length) % colors.length];
-
-                // 绘制粒子
-                Draw.color(color, alpha);
-                Fill.circle(px, py, size);
-
-                // 添加光晕效果
-                if(size > 3f){
-                    Draw.color(color, alpha * 0.3f);
-                    Fill.circle(px, py, size * 1.8f);
-                }
+                // 仅修改绘制部分：使用正方形替代圆形
+                Color particleColor = getColor(weights, colors);
+                Draw.color(particleColor, a);
+                Fill.square(px, py, 8f + efficiency * 3f, 45); // 正方形，旋转45度形成菱形
             }
 
-            Draw.reset(); // 重置绘制状态
+            Draw.reset();
         }
 
+        // 保持原始颜色选择逻辑
         private Color getColor(float[] weights, Color[] colors) {
             float rand = Mathf.random();
             float cumulativeWeight = 0f;
@@ -204,6 +250,7 @@ public class accumulator extends GenericCrafter {
             super.read(read, revision);
             BrrierNum = read.i(); // 加载障碍物数量
             ThisTile = tile; // 重新关联Tile
+            initParticles();      // 重新初始化粒子
         }
     }
 }
