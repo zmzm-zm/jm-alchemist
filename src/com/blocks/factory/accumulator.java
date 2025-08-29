@@ -18,17 +18,14 @@ import mindustry.type.LiquidStack;
 import mindustry.world.Tile;
 import mindustry.world.blocks.production.GenericCrafter;
 import com.liquids.liquids;
-import arc.math.Mathf;
-
-import java.awt.*;
 
 public class accumulator extends GenericCrafter {
 
-    //构造函数
+    // 构造函数
     public accumulator(String name) {
         super(name);
 
-        //基础属性
+        // 基础属性
         health = 50;
         size = 3;
         hasLiquids = true;
@@ -39,7 +36,7 @@ public class accumulator extends GenericCrafter {
         liquidPressure = 8.2f;
         buildTime = 2f * 60f;
 
-        //建造需要
+        // 建造需要
         requirements(
                 Category.crafting,
                 ItemStack.with(
@@ -57,78 +54,32 @@ public class accumulator extends GenericCrafter {
         private int NeedSize = 6;
         private int BrrierNum = 0;
         private Tile ThisTile;
-        private float[] particleSeeds;
 
-        // 粒子系统参数
-        private final int particleCount = 35;      // 粒子总数
-        private final float maxRadius = 140f;      // 最大旋转半径
-        private final float minRadius = 1f;        // 最小旋转半径
-        private final float cycleTime = 10f;       // 完整生命周期（秒）
-        private final float rotationSpeed = 1f;    // 基础旋转速度
+        // 粒子系统属性
+        private static final int MAX_PARTICLES = 300;
+        private static final float MAX_RADIUS = 200f;
+        private static final float SPAWN_INTERVAL = 0.03f;
 
-        // 粒子属性存储
-        private float[] particleRadii;            // 当前半径
-        private float[] particleAngles;           // 当前角度
-        private float[] particleTimeOffsets;      // 时间偏移量（个体差异）
-        private Color[] particleColors;           // 粒子颜色
-        private Vec2[] particlePositions;         // 计算位置缓存
+        private Particle[] particles = new Particle[MAX_PARTICLES];
+        private int particleCount = 0;
+        private float spawnTimer = 0f;
+
+        // 颜色配置（使用原代码中的颜色）
+        private Color[] colorPalette = {
+                Color.valueOf("#feff89"),  // 主色调
+                Color.valueOf("#e7e89c"),  // 次要色调
+                Color.valueOf("#c8c849")   // 高光色调
+        };
+
+        private float[] colorWeights = {0.7f, 0.4f, 0.4f};
+
+        private Rand rand = new Rand();
 
         @Override
         public void placed() {
             super.placed();
             ThisTile = tile;
-            // 初始化粒子种子
-            particleSeeds = new float[35]; // 保持原始35个粒子
-            Rand rand = new Rand();
-            for(int i = 0; i < particleSeeds.length; i++){
-                particleSeeds[i] = rand.random(360f); // 随机角度种子
-            }
-        }
-
-        // 初始化粒子属性
-        private void initParticles() {
-            Rand rand = new Rand();
-
-            // 颜色配置（与绘图效果一致）
-            Color[] colors = {
-                    Color.valueOf("#feff89"),  // 主色调
-                    Color.valueOf("#e7e89c"),  // 次要色调
-                    Color.valueOf("#c8c849")   // 高光色调
-            };
-            float[] weights = {0.4f, 0.3f, 0.3f};
-
-            // 初始化粒子数组
-            particleRadii = new float[particleCount];
-            particleAngles = new float[particleCount];
-            particleTimeOffsets = new float[particleCount];
-            particleColors = new Color[particleCount];
-            particlePositions = new Vec2[particleCount];
-
-            // 为每个粒子生成随机属性
-            for (int i = 0; i < particleCount; i++) {
-                // 初始半径在最大半径范围内随机
-                particleRadii[i] = rand.random(minRadius, maxRadius * 0.9f);
-
-                // 随机角度（0-360度）
-                particleAngles[i] = rand.random(360f);
-
-                // 时间偏移（使粒子运动不同步）
-                particleTimeOffsets[i] = rand.random(cycleTime);
-
-                // 随机分配颜色（按权重）
-                float colorChoice = rand.nextFloat();
-                float cumulative = 0f;
-                for (int c = 0; c < weights.length; c++) {
-                    cumulative += weights[c];
-                    if (colorChoice <= cumulative) {
-                        particleColors[i] = colors[c];
-                        break;
-                    }
-                }
-
-                // 初始化位置缓存
-                particlePositions[i] = new Vec2();
-            }
+            rand.setSeed(Time.millis() + tile.pos());
         }
 
         private int GetBrrierNum() {
@@ -147,9 +98,9 @@ public class accumulator extends GenericCrafter {
 
         @Override
         public void update() {
-            //super.update();
+            super.update();
 
-            if(timer.get(0,1.2f * 60f)) {
+            if(timer.get(0, 1.2f * 60f)) {
                 BrrierNum = GetBrrierNum();
                 Vars.ui.showInfoToast("障碍物：" + BrrierNum + " 效率：" + efficiency, 1f);
             }
@@ -178,10 +129,60 @@ public class accumulator extends GenericCrafter {
 
             dumpLiquid(outputLiquid.liquid);
 
+            // 更新粒子系统
+            updateParticles();
         }
 
+        private void updateParticles() {
+            if (efficiency <= 0.01f) return;
 
+            // 更新生成计时器
+            spawnTimer += Time.delta / 1000f; // 转换为秒
 
+            // 根据效率调整生成速率
+            float adjustedSpawnInterval = SPAWN_INTERVAL / efficiency;
+
+            // 生成新粒子
+            while (spawnTimer >= adjustedSpawnInterval && particleCount < MAX_PARTICLES) {
+                spawnTimer -= adjustedSpawnInterval;
+                addParticle();
+            }
+
+            // 更新现有粒子
+            for (int i = 0; i < particleCount; i++) {
+                Particle p = particles[i];
+                p.update(x, y);
+
+                // 移除生命周期结束的粒子
+                if (p.R <= 0) {
+                    // 用最后一个粒子替换当前粒子，然后减少计数
+                    particles[i] = particles[particleCount - 1];
+                    particleCount--;
+                    i--; // 重新检查当前位置
+                }
+            }
+        }
+
+        private void addParticle() {
+            if (particleCount >= MAX_PARTICLES) return;
+
+            // 随机属性
+            float r = rand.random(MAX_RADIUS * 0.8f, MAX_RADIUS);
+            float addAngle = rand.random(0.5f, 2.0f);
+            float needsTime = rand.random(80.0f, 120.0f);
+
+            // 创建新粒子
+            Particle p = new Particle(
+                    x, y, r, 0, 1f, needsTime,
+                    addAngle, r, colorPalette, colorWeights
+            );
+            p.randAngle(rand);
+            p.randColor(rand);
+
+            // 添加到粒子数组
+            particles[particleCount] = p;
+            particleCount++;
+        }
 
         @Override
         public void draw() {
@@ -190,54 +191,20 @@ public class accumulator extends GenericCrafter {
 
             Draw.z(Layer.effect);
 
-            // 保持原始颜色配置
-            Color[] colors = {
-                    Color.valueOf("#feff89"),
-                    Color.valueOf("#e7e89c"),
-                    Color.valueOf("#c8c849")
-            };
-            float[] weights = {0.4f, 0.3f, 0.3f};
-
-            // 保持原始粒子数量计算
-            int particleCount = Mathf.clamp((int)(35f * efficiency), 10, 35);
-            float maxRadius = 140f;
-            float minRadius = 1f;
-            float cycleTime = 10f;
-
+            // 绘制所有粒子
             for (int i = 0; i < particleCount; i++) {
-                // 完全保持原始运动逻辑
-                float seed = particleSeeds[i];
-                float progress = ((Time.time / cycleTime) + (seed * 0.001f)) % 1f;
-                float spiralProgress = progress < 0.5f ? progress * 2f : (1f - progress) * 2f;
-                float currentRadius = minRadius + (maxRadius - minRadius) * spiralProgress;
-                float angle = Time.time * 1f + (i * 137.5f) + seed;
+                Particle p = particles[i];
+                Draw.color(p.CurrentColor, p.A);
 
-                float px = x + Mathf.cosDeg(angle) * currentRadius;
-                float py = y + Mathf.sinDeg(angle) * currentRadius;
-                float a = Mathf.clamp(0.8f * efficiency * spiralProgress * 0.7f, 0.25f, 1f);
+                int size = (int)(p.R * 0.1f);
+                if (size <= 0) size = 1;
 
-                // 仅修改绘制部分：使用正方形替代圆形
-                Color particleColor = getColor(weights, colors);
-                Draw.color(particleColor, a);
-                Fill.square(px, py, 8f + efficiency * 3f, 45); // 正方形，旋转45度形成菱形
+                // 绘制正方形粒子
+                Fill.square(p.X, p.Y, size / 2f, 0);
             }
 
             Draw.reset();
         }
-
-        // 保持原始颜色选择逻辑
-        private Color getColor(float[] weights, Color[] colors) {
-            float rand = Mathf.random();
-            float cumulativeWeight = 0f;
-            for (int i = 0; i < weights.length; i++) {
-                cumulativeWeight += weights[i];
-                if (rand <= cumulativeWeight) {
-                    return colors[i];
-                }
-            }
-            return colors[0];
-        }
-
 
         @Override
         public void write(Writes write) {
@@ -250,7 +217,74 @@ public class accumulator extends GenericCrafter {
             super.read(read, revision);
             BrrierNum = read.i(); // 加载障碍物数量
             ThisTile = tile; // 重新关联Tile
-            initParticles();      // 重新初始化粒子
+        }
+
+        // 粒子类
+        private class Particle {
+            float X, Y;
+            float R;
+            float Angle;
+            float A;
+            float CircleR;
+            float NeedsTime;
+            float AddAngle;
+            Color[] ColorPalette;
+            Color CurrentColor;
+            float[] ColorsWeights;
+
+            Particle(float x, float y, float r, float angle, float a,
+                     float needsTime, float addAngle, float circleR,
+                     Color[] palette, float[] weights) {
+                X = x;
+                Y = y;
+                R = r;
+                Angle = angle;
+                A = a;
+                NeedsTime = needsTime;
+                AddAngle = addAngle;
+                CircleR = circleR;
+                ColorPalette = palette;
+                ColorsWeights = weights;
+                CurrentColor = palette[0];
+            }
+
+            void randColor(Rand rand) {
+                float totalWeight = 0;
+                for (float w : ColorsWeights) totalWeight += w;
+
+                float randomValue = rand.random(totalWeight);
+                float cumulativeWeight = 0;
+
+                for (int i = 0; i < ColorPalette.length; i++) {
+                    cumulativeWeight += ColorsWeights[i];
+                    if (randomValue <= cumulativeWeight) {
+                        CurrentColor = ColorPalette[i];
+                        break;
+                    }
+                }
+            }
+
+            void randAngle(Rand rand) {
+                Angle = rand.random(360f);
+            }
+
+            void update(float centerX, float centerY) {
+                // 更新角度
+                Angle += AddAngle * Time.delta / 16f; // 基于帧率的调整
+                if (Angle >= 360f) Angle -= 360f;
+
+                // 缩小半径
+                R -= (CircleR / NeedsTime) * Time.delta / 16f;
+                if (R < 0) R = 0;
+
+                // 计算新位置
+                float rad = (float)Math.toRadians(Angle);
+                X = centerX + (float)Math.cos(rad) * R;
+                Y = centerY + (float)Math.sin(rad) * R;
+
+                // 随时间淡出
+                A = Mathf.clamp(R / CircleR, 0f, 1f);
+            }
         }
     }
 }
